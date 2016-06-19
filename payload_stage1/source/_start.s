@@ -12,42 +12,24 @@ _start:
     @ Change the stack pointer
     mov sp, #0x27000000
 
-    @ Set up relocation register (r9)
-    @   this instruction is 16 bytes away from the start, takes into account the 8
-    @   bytes PC is ahead, meaning pc - 24 == start in memory
-    sub r9, pc, #24
-
     @ Disable caches and MPU
-    ldr r0, =disable_mpu_and_caching
-    add r0, r0, r9
-    blx r0
+    bl disable_mpu_and_caching
 
     @ Flush caches
-    ldr r0, =flush_all_caches
-    add r0, r0, r9
-    blx r0
-
-    @ Setup GOT table (just in case)
-    ldr r0, =__got_start
-    ldr r1, =__got_end
-    mov r2, r9
-
-    ldr r3, =relocate_section
-    add r3, r3, r9
-    blx r3
+    bl flush_all_caches
 
     @ Set MPU table
-    ldr r0, =setup_mpu_table
-    add r0, r0, r9
-    blx r0
+    bl setup_mpu_table
 
     @ Enable caches and MPU
-    ldr r0, =enable_mpu_and_caching
-    add r0, r0, r9
-    blx r0
+    bl enable_mpu_and_caching
 
-    ldr r0, =main
-    add r0, r0, r9
+    @ Fix mounting of SDMC
+    ldr r0, =0x10000020
+    mov r1, #0x340
+    str r1, [r0]
+
+	ldr r0, =main
     blx r0
 
 .die:
@@ -103,23 +85,5 @@ setup_mpu_table:
     mcr p15, 0, r0, c5, c0, 3 @ write instruction access
 
     pop {r4-r7}
-    bx lr
-
-@ r0 - region start
-@ r1 - region end
-@ r2 - relocation base (usually starting PC address)
-relocate_section:
-    add r0, r0, r2
-    add r1, r1, r2
-
-    .Lreloc_init:
-    cmp r0, r1
-    beq .Lrelocinit_done
-    ldr r3, [r0]
-    add r3, r2, r3
-    str r3, [r0], #4
-    b .Lreloc_init
-    .Lrelocinit_done:
-
     bx lr
 

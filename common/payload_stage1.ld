@@ -4,8 +4,7 @@ ENTRY(_start)
 
 MEMORY
 {
-	/* ram : ORIGIN = 0x0808FB90, LENGTH = 0x5k */
-	ram : ORIGIN = 0x00, LENGTH = 0x5k
+	ram : ORIGIN = 0x0808FB90, LENGTH = 0x5k
 }
 
 SECTIONS
@@ -113,6 +112,20 @@ SECTIONS
 		*(.got.plt) *(.got)
 	} >ram = 0
 	__got_end = .;
+
+    .data.rel.ro.local : {
+        __data_rel_ro_local_start = .;
+        *(.data.rel.ro.local)
+        . = ALIGN(4);
+    } >ram = 0xff
+    __data_rel_ro_local_end = .;
+
+    .data.rel.ro : {
+        __data_rel_ro_start = .;
+        *(.data.rel.ro)
+        . = ALIGN(4);
+    } >ram = 0xff
+    __data_rel_ro_end = .;
 
 	.data ALIGN(4) : 	{
 		__data_start = ABSOLUTE(.);

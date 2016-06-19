@@ -29,11 +29,11 @@ INCLUDES	:=	include source source/fatfs
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-mthumb -Wl,--use-blx
+ARCH	:=	-mthumb -Wl,--use-blx,--pic-veneer -ffunction-sections
 
-CFLAGS	:=	-g -Wall -O2 -fPIC -flto -nostdlib\
+CFLAGS	:=	-g -Wall -O2 -flto\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
-			-ffast-math -std=c99\
+			-ffast-math -std=c99 -L${CTRARM9}/lib -I${CTRARM9}/include\
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE)
@@ -41,13 +41,13 @@ CFLAGS	+=	$(INCLUDE)
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map -nostdlib \
-			-Wl,--use-blx -fPIC
+LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map \
+			-Wl,-q,--use-blx,--pic-veneer,--gc-sections -ffunction-sections -L${CTRARM9}/lib
 
 LDFLAGS += --specs=../../common/payload_stage1.specs
 
 
-LIBS	:=
+LIBS	:= -lctr9
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -127,7 +127,7 @@ $(OUTPUT).elf	:	$(OFILES)
 %.bin: %.elf
 	@$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
 	@echo built ... $(notdir $@)
-	@rm -f $(OUTPUT).elf
+	#@rm -f $(OUTPUT).elf
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data

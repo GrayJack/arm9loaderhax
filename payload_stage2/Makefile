@@ -29,11 +29,11 @@ INCLUDES	:=	include source source/fatfs
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-mthumb -Wl,--use-blx
+ARCH	:=	-mthumb -Wl,-q,--use-blx,--gc-section
 
-CFLAGS	:=	-g -Wall -fPIC -Wno-unused-function -O2\
+CFLAGS	:=	-g -Wall -Wno-unused-function -O2\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
-			-ffast-math -std=c11 -nodefaultlibs\
+			-ffast-math -std=c11 -I${CTRARM9}/include \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE)
@@ -41,13 +41,12 @@ CFLAGS	+=	$(INCLUDE)
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map -nostdlib \
-			-Wl,--use-blx -fPIC
+LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map \
+			-Wl,--use-blx
 
-LDFLAGS += --specs=../../common/payload_stage2.specs
+LDFLAGS += --specs=../../common/payload_stage2.specs -L${CTRARM9}/lib
 
-
-LIBS	:= -lgcc
+LIBS	:= -lctr9
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

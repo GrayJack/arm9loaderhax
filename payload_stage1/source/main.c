@@ -1,17 +1,16 @@
-#include "common.h"
-#include "sdmmc.h"
+#include <ctr9/io.h>
 #include "flush.h"
+#include <ctr9/ctr_system.h>
 
 int main()
 {
 	// Initialize sdcard and nand
-	*(vu32*)0x10000020 = 0;
-	*(vu32*)0x10000020 = 0x340;
-	sdmmc_sdcard_init();
-	sdmmc_nand_readsectors(0x5C000, 0x20, (u8*)0x08006000);
+	ctr_nand_interface nand;
+	ctr_nand_interface_initialize(&nand);
+	ctr_io_read_sector(&nand, (void*)0x08006000, 0x200*0x60, 0x5C000, 0x60);
 	flush_all_caches();
 	// Jump to secondary payload
 	((void (*)())0x08006000)();
 	
-    return 0;
+	return 0;
 }
