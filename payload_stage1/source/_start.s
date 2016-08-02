@@ -74,7 +74,7 @@ setup_mpu_table:
     mcr p15, 0, r5, c6, c5, 0
     mcr p15, 0, r6, c6, c6, 0
     mcr p15, 0, r7, c6, c7, 0
-    mov r0, #0x25
+    mov r0, #0b10100101
     mcr p15, 0, r0, c2, c0, 0  @ data cacheable
     mcr p15, 0, r0, c2, c0, 1  @ instruction cacheable
     mcr p15, 0, r0, c3, c0, 0  @ data bufferable

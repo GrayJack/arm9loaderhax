@@ -4,6 +4,7 @@
 #include <ctr9/io.h>
 #include <ctr9/io/ctr_fatfs.h>
 #include <ctr9/ctr_system.h>
+#include <ctr9/ctr_screen.h>
 
 #include <string.h>
 
@@ -26,26 +27,55 @@ static void ownArm11()
 	while(*(volatile uint32_t *)A11_ENTRY);
 }
 
+static const char * find_file(const char *path)
+{
+	f_chdrive("SD:");
+	if (ctr_sd_interface_inserted() && (FR_OK == f_stat(path, NULL)))
+	{
+		return "SD:";
+	}
+	else
+	{
+		f_chdrive("CTRNAND:");
+		if (FR_OK == f_stat(path, NULL))
+		{
+			return "CTRNAND:";
+		}
+	}
+
+	return NULL;
+}
+
 int main()
 {
-	FATFS fs;
+	FATFS fs1;
+	FATFS fs2;
 	FIL payload;
 	ctr_nand_interface nand;
+	ctr_nand_crypto_interface ctrnand;
 	ctr_sd_interface sd;
-	ctr_fatfs_initialize(&nand, NULL, NULL, &sd);
+	ctr_fatfs_initialize(&nand, &ctrnand, NULL, &sd);
 
-	f_mount(&fs, "SD:", 0); //This never fails due to deferred mounting
-	if(f_open(&payload, "SD:/arm9loaderhax.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK)
+	f_mount(&fs1, "SD:", 0); //This never fails due to deferred mounting
+	f_mount(&fs2, "CTRNAND:", 0); //This never fails due to deferred mounting
+
+	const char * drive = find_file("/arm9loaderhax.bin");
+	if (drive)
 	{
-		setFramebuffers();
-		ownArm11();
-		clearScreens();
-		turnOnBacklight();
+		f_chdrive(drive);
+		if(f_open(&payload, "/arm9loaderhax.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK)
+		{
+			setFramebuffers();
+			ownArm11();
+			clearScreens();
+			i2cWriteRegister(3, 0x22, 0x2);
+			ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
 
-		unsigned int br;
-		f_read(&payload, (void*)PAYLOAD_ADDRESS, f_size(&payload), &br);
-		flush_all_caches();
-		((void (*)(void))PAYLOAD_ADDRESS)();
+			unsigned int br;
+			f_read(&payload, (void*)PAYLOAD_ADDRESS, f_size(&payload), &br);
+			flush_all_caches();
+			((void (*)(void))PAYLOAD_ADDRESS)();
+		}
 	}
 
 	ctr_system_poweroff();
