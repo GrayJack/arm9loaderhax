@@ -29,12 +29,10 @@ INCLUDES	:=	include source source/fatfs
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-mthumb -Wl,-q,--use-blx,--gc-section
+ARCH	:=	-mthumb -march=armv5te -mtune=arm946e-s
 
-CFLAGS	:=	-g -Wall -Wno-unused-function -O2\
-			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
-			-ffast-math -std=c11 -I${CTRARM9}/include \
-			$(ARCH)
+CFLAGS	:=	-g -Wall -Wno-unused-function -O2 -fomit-frame-pointer\
+			-ffast-math -std=c11 -I${CTRARM9}/include $(ARCH)
 
 CFLAGS	+=	$(INCLUDE)
 
@@ -42,11 +40,11 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map \
-			-Wl,--use-blx
+			-Wl,--use-blx,--pic-veneer,-q,--gc-section
 
 LDFLAGS += --specs=../../common/payload_stage2.specs -L${CTRARM9}/lib
 
-LIBS	:= -lctr9
+LIBS	:= -lctr9 -lctrelf
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -89,7 +87,7 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES	:= $(addsuffix .o,$(BINFILES)) \
-			$(SFILES:.s=.o) $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) 
+			$(SFILES:.s=.o) $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \

@@ -1,10 +1,14 @@
 #include "screen.h"
 #include "flush.h"
+#include "elf.h"
 
 #include <ctr9/io.h>
 #include <ctr9/io/ctr_fatfs.h>
 #include <ctr9/ctr_system.h>
 #include <ctr9/ctr_screen.h>
+#include <ctr9/i2c.h>
+#include <ctrelf.h>
+
 
 #include <string.h>
 
@@ -65,16 +69,28 @@ int main()
 		f_chdrive(drive);
 		if(f_open(&payload, "/arm9loaderhax.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK)
 		{
+
 			setFramebuffers();
 			ownArm11();
 			clearScreens();
 			i2cWriteRegister(3, 0x22, 0x2);
 			ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
 
-			unsigned int br;
-			f_read(&payload, (void*)PAYLOAD_ADDRESS, f_size(&payload), &br);
-			flush_all_caches();
-			((void (*)(void))PAYLOAD_ADDRESS)();
+			Elf32_Ehdr header;
+			load_header(&header, &payload);
+			f_lseek(&payload, 0);
+			if (check_elf(&header))
+			{
+				load_segments(&header, &payload);
+				((void (*)(void))(header.e_entry))();
+			}
+			else
+			{
+				unsigned int br;
+				f_read(&payload, (void*)PAYLOAD_ADDRESS, f_size(&payload), &br);
+				flush_all_caches();
+				((void (*)(void))PAYLOAD_ADDRESS)();
+			}
 		}
 	}
 
