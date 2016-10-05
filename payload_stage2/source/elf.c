@@ -29,9 +29,10 @@ int load_segment(const Elf32_Phdr *header, FIL *file)
 			return 1;
 	}
 
-	f_lseek(file, header->p_offset);
+	int res = f_lseek(file, header->p_offset);
 	UINT br;
-	f_read(file, location, program_size, &br);
+
+	res = f_read(file, location, program_size, &br);
 	memset(program_size + (char*)location, 0, mem_size - program_size);
 
 	ctr_cache_clean_data_range(location, (char*)location + mem_size);

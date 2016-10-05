@@ -7,9 +7,9 @@
 #include <ctr9/ctr_system.h>
 #include <ctr9/ctr_screen.h>
 #include <ctr9/i2c.h>
+#include <ctr9/sha.h>
+
 #include <ctrelf.h>
-
-
 #include <string.h>
 
 #define PAYLOAD_ADDRESS		0x23F00000
@@ -50,8 +50,21 @@ static const char * find_file(const char *path)
 	return NULL;
 }
 
+inline static void vol_memcpy(volatile void *dest, volatile void *sorc, size_t size)
+{
+	volatile uint8_t *dst = dest;
+	volatile uint8_t *src = sorc;
+	while(size--)
+		dst[size] = src[size];
+}
+
 int main()
 {
+	//backup the OTP hash, before we lose it due to libctr9 using sha functions
+	//for twl
+	uint8_t otp_sha[32];
+	vol_memcpy(otp_sha, REG_SHAHASH, 0x20);
+
 	FATFS fs1;
 	FATFS fs2;
 	FIL payload;
@@ -66,15 +79,17 @@ int main()
 	const char * drive = find_file("/arm9loaderhax.bin");
 	if (drive)
 	{
+		setFramebuffers();
+		ownArm11();
+		clearScreens();
+		i2cWriteRegister(3, 0x22, 0x2);
+		ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
+
 		f_chdrive(drive);
 		if(f_open(&payload, "/arm9loaderhax.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK)
 		{
-
-			setFramebuffers();
-			ownArm11();
-			clearScreens();
-			i2cWriteRegister(3, 0x22, 0x2);
-			ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
+			//Restore the OTP hash
+			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
 
 			Elf32_Ehdr header;
 			load_header(&header, &payload);
