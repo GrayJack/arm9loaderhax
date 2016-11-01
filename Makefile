@@ -11,7 +11,7 @@ all : $(OUTDIR) hax installer
 hax : $(OUTDIR) firm0 firm1 sector screen_init stage2 package
 	@cd payload_installer/installer && make TARGET=../../$(OUTDIR)/$(TARGET)
 
-stage2_update: $(OUTDIR) $(PACKTOOL) stage2 
+stage2_update: $(OUTDIR) $(PACKTOOL) stage2
 	@$(PACKTOOL) null null null $(OUTDIR)/stage0x5C000.bin
 	@dd if=payload_stage2/label.txt of=arm9loaderhax.pack bs=32 seek=1 conv=notrunc
 	@mv arm9loaderhax.pack $(OUTDIR)/arm9loaderhax.pack
@@ -40,12 +40,11 @@ stage2: screen_init
 	@cp screen_init/screen_init.bin payload_stage2/data
 	@$(MAKE) -C payload_stage2
 	@cp payload_stage2/payload_stage2.bin $(OUTDIR)/stage0x5C000.bin
-	
+
 package: $(PACKTOOL)
 	@$(PACKTOOL) $(OUTDIR)/firm0.bin $(OUTDIR)/firm1.bin $(OUTDIR)/sector.bin $(OUTDIR)/stage0x5C000.bin
 	@mv arm9loaderhax.pack $(OUTDIR)/arm9loaderhax.pack
-	@rm -f $(OUTDIR)/firm0.bin $(OUTDIR)/firm1.bin $(OUTDIR)/sector.bin $(OUTDIR)/stage0x5C000.bin
-	
+
 $(PACKTOOL):
 	@echo Building pack_tool...
 	@cd $(PACKTOOL)_src && make

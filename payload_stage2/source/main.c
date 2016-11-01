@@ -3,7 +3,7 @@
 #include "elf.h"
 
 #include <ctr9/io.h>
-#include <ctr9/io/ctr_fatfs.h>
+#include <ctr9/io/ctr_drives.h>
 #include <ctr9/ctr_system.h>
 #include <ctr9/ctr_screen.h>
 #include <ctr9/i2c.h>
@@ -11,6 +11,9 @@
 
 #include <ctrelf.h>
 #include <string.h>
+#include <stdio.h>
+
+#include <sys/stat.h>
 
 #define PAYLOAD_ADDRESS		0x23F00000
 #define A11_PAYLOAD_LOC		0x1FFF4C80  //keep in mind this needs to be changed in the ld script for screen_init too
@@ -31,22 +34,17 @@ static void ownArm11()
 	while(*(volatile uint32_t *)A11_ENTRY);
 }
 
-static const char * find_file(const char *path)
+static const char *find_file(const char *path, const char* drives[], size_t number_of_drives)
 {
-	f_chdrive("SD:");
-	if (ctr_sd_interface_inserted() && (FR_OK == f_stat(path, NULL)))
+	for (size_t i = 0; i < number_of_drives; ++i)
 	{
-		return "SD:";
-	}
-	else
-	{
-		f_chdrive("CTRNAND:");
-		if (FR_OK == f_stat(path, NULL))
+		ctr_drives_chdrive(drives[i]);
+		struct stat st;
+		if (stat(path, &st) == 0)
 		{
-			return "CTRNAND:";
+			return drives[i];
 		}
 	}
-
 	return NULL;
 }
 
@@ -65,18 +63,10 @@ int main()
 	uint8_t otp_sha[32];
 	vol_memcpy(otp_sha, REG_SHAHASH, 0x20);
 
-	FATFS fs1;
-	FATFS fs2;
-	FIL payload;
-	ctr_nand_interface nand;
-	ctr_nand_crypto_interface ctrnand;
-	ctr_sd_interface sd;
-	ctr_fatfs_initialize(&nand, &ctrnand, NULL, &sd);
+	ctr_drives_initialize();
 
-	f_mount(&fs1, "SD:", 0); //This never fails due to deferred mounting
-	f_mount(&fs2, "CTRNAND:", 0); //This never fails due to deferred mounting
-
-	const char * drive = find_file("/arm9loaderhax.bin");
+	const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
+	const char * drive = find_file("/arm9loaderhax.bin", drives, 4);
 	if (drive)
 	{
 		setFramebuffers();
@@ -85,24 +75,26 @@ int main()
 		i2cWriteRegister(3, 0x22, 0x2);
 		ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
 
-		f_chdrive(drive);
-		if(f_open(&payload, "/arm9loaderhax.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK)
+		ctr_drives_chdrive(drive);
+		FILE *payload = fopen("/arm9loaderhax.bin", "rb");
+		if(payload)
 		{
 			//Restore the OTP hash
 			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
 
 			Elf32_Ehdr header;
-			load_header(&header, &payload);
-			f_lseek(&payload, 0);
+			load_header(&header, payload);
+			fseek(payload, 0, SEEK_SET);
 			if (check_elf(&header))
 			{
-				load_segments(&header, &payload);
+				load_segments(&header, payload);
 				((void (*)(void))(header.e_entry))();
 			}
 			else
 			{
-				unsigned int br;
-				f_read(&payload, (void*)PAYLOAD_ADDRESS, f_size(&payload), &br);
+				struct stat st;
+				fstat(fileno(payload), &st);
+				fread((void*)PAYLOAD_ADDRESS, st.st_size, 1, payload);
 				flush_all_caches();
 				((void (*)(void))PAYLOAD_ADDRESS)();
 			}

@@ -32,7 +32,7 @@ INCLUDES	:=	include source source/fatfs
 ARCH	:=	-mthumb -march=armv5te -mtune=arm946e-s
 
 CFLAGS	:=	-g -Wall -Wno-unused-function -O2 -fomit-frame-pointer\
-			-ffast-math -std=c11 -I${CTRARM9}/include $(ARCH)
+			-ffast-math -std=gnu11 -I${CTRARM9}/include $(ARCH)
 
 CFLAGS	+=	$(INCLUDE)
 
