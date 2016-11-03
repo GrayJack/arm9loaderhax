@@ -39,7 +39,7 @@ CFLAGS	+=	$(INCLUDE)
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map \
+LDFLAGS	=	-g $(ARCH) -Wl,-Map,$(TARGET).map \
 			-Wl,--use-blx,--pic-veneer,-q,--gc-section
 
 LDFLAGS += --specs=../../common/payload_stage2.specs -L${CTRARM9}/lib

@@ -9,6 +9,12 @@ MEMORY
 
 SECTIONS
 {
+	.text.start :   /* ALIGN (4): */
+	{
+		*(.text.start)
+		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
+	} >ram = 0xff
+
 	.init	:
 	{
 		__text_start = . ;
@@ -16,12 +22,6 @@ SECTIONS
 		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
 		} >ram = 0xff
 	.plt : { *(.plt) } >ram = 0xff
-
-	.text.start :   /* ALIGN (4): */
-	{
-		*(.text.start)
-		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
-	} >ram = 0xff
 
 	.text :   /* ALIGN (4): */
 	{
