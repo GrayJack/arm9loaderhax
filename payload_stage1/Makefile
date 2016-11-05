@@ -41,7 +41,7 @@ CFLAGS	+=	$(INCLUDE)
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-nostartfiles -g $(ARCH) -Wl,-Map,$(TARGET).map \
+LDFLAGS	=	-g $(ARCH) -Wl,-Map,$(TARGET).map \
 			-Wl,-q,--use-blx,--pic-veneer,--gc-sections -ffunction-sections -L${CTRARM9}/lib
 
 LDFLAGS += --specs=../../common/payload_stage1.specs
@@ -127,7 +127,7 @@ $(OUTPUT).elf	:	$(OFILES)
 %.bin: %.elf
 	@$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
 	@echo built ... $(notdir $@)
-	@rm -f $(OUTPUT).elf
+	#@rm -f $(OUTPUT).elf
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data

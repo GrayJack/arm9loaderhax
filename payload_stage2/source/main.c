@@ -22,6 +22,11 @@
 extern uint8_t screen_init_bin[];
 extern uint32_t screen_init_bin_size;
 
+void ctr_libctr9_init(void)
+{
+	//Do nothing yet. Initialize IO later.
+}
+
 static void ownArm11()
 {
 	memcpy((void*)A11_PAYLOAD_LOC, screen_init_bin, screen_init_bin_size);
