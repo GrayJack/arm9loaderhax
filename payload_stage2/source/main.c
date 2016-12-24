@@ -8,6 +8,7 @@
 #include <ctr9/ctr_screen.h>
 #include <ctr9/i2c.h>
 #include <ctr9/sha.h>
+#include <ctr9/ctr_interrupt.h>
 
 #include <ctrelf.h>
 #include <string.h>
@@ -61,6 +62,20 @@ inline static void vol_memcpy(volatile void *dest, volatile void *sorc, size_t s
 		dst[size] = src[size];
 }
 
+static const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
+
+typedef void (*main_func)(int, char*[]);
+
+void emergency_mode(uint32_t *registers)
+{
+	ctr_sd_interface sd;
+	ctr_sd_interface_initialize(&sd);
+	ctr_io_read_sector(&sd, (void*)PAYLOAD_ADDRESS, 0x100000, 0, 0x100000);
+	flush_all_caches();
+	ctr_sd_interface_destroy(&sd);
+	((main_func)PAYLOAD_ADDRESS)(0, NULL);
+}
+
 int main()
 {
 	//backup the OTP hash, before we lose it due to libctr9 using sha functions
@@ -68,9 +83,13 @@ int main()
 	uint8_t otp_sha[32];
 	vol_memcpy(otp_sha, REG_SHAHASH, 0x20);
 
+	ctr_interrupt_prepare();
+	ctr_interrupt_set(CTR_INTERRUPT_DATABRT, emergency_mode);
+	ctr_interrupt_set(CTR_INTERRUPT_UNDEF, emergency_mode);
+	ctr_interrupt_set(CTR_INTERRUPT_PREABRT, emergency_mode);
+
 	ctr_drives_initialize();
 
-	const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
 	const char * drive = find_file("/arm9loaderhax.bin", drives, 4);
 	if (drive)
 	{
@@ -90,10 +109,18 @@ int main()
 			Elf32_Ehdr header;
 			load_header(&header, payload);
 			fseek(payload, 0, SEEK_SET);
+
+			int argc = 1;
+			char *payload_source = (char*)0x30000004;
+			strcpy(payload_source, drive);
+			strcat(payload_source, "/arm9loaderhax.bin");
+			char **argv = (char**)0x30000000;
+			argv[0] = payload_source;
+
 			if (check_elf(&header))
 			{
 				load_segments(&header, payload);
-				((void (*)(void))(header.e_entry))();
+				((main_func)(header.e_entry))(argc, argv);
 			}
 			else
 			{
@@ -101,7 +128,7 @@ int main()
 				fstat(fileno(payload), &st);
 				fread((void*)PAYLOAD_ADDRESS, st.st_size, 1, payload);
 				flush_all_caches();
-				((void (*)(void))PAYLOAD_ADDRESS)();
+				((main_func)PAYLOAD_ADDRESS)(argc, argv);
 			}
 		}
 	}

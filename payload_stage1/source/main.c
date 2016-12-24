@@ -12,10 +12,13 @@ int main()
 	// Initialize sdcard and nand
 	ctr_nand_interface nand;
 	ctr_nand_interface_initialize(&nand);
+	//Reading 0x100 sectors, 131072 bytes
 	ctr_io_read_sector(&nand, (void*)0x08006000, 0x200*0x100, 0x5C000, 0x100);
+	ctr_nand_interface_destroy(&nand);
 	flush_all_caches();
 	// Jump to secondary payload
 	((void (*)())0x08006000)();
 
 	return 0;
 }
+
