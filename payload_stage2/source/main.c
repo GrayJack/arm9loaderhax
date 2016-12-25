@@ -66,7 +66,7 @@ static const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
 
 typedef void (*main_func)(int, char*[]);
 
-void emergency_mode(uint32_t *registers)
+void emergency_mode(uint32_t *registers, void *data)
 {
 	ctr_sd_interface sd;
 	ctr_sd_interface_initialize(&sd);
@@ -84,9 +84,9 @@ int main()
 	vol_memcpy(otp_sha, REG_SHAHASH, 0x20);
 
 	ctr_interrupt_prepare();
-	ctr_interrupt_set(CTR_INTERRUPT_DATABRT, emergency_mode);
-	ctr_interrupt_set(CTR_INTERRUPT_UNDEF, emergency_mode);
-	ctr_interrupt_set(CTR_INTERRUPT_PREABRT, emergency_mode);
+	ctr_interrupt_set(CTR_INTERRUPT_DATABRT, emergency_mode, NULL);
+	ctr_interrupt_set(CTR_INTERRUPT_UNDEF, emergency_mode, NULL);
+	ctr_interrupt_set(CTR_INTERRUPT_PREABRT, emergency_mode, NULL);
 
 	ctr_drives_initialize();
 
