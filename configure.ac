@@ -43,5 +43,6 @@ AC_CHECK_FUNCS([bzero memmove memset strcasecmp])
 AC_CONFIG_FILES([Makefile
                  payload_stage1/Makefile
                  payload_stage2/Makefile
-                 screen_init/Makefile])
+                 screen_init/Makefile
+				 output/Makefile])
 AC_OUTPUT

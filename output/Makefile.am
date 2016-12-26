@@ -1,0 +1,16 @@
+include $(top_srcdir)/common.mk
+
+bin_PROGRAMS = payload_stage1.bin payload_stage2.bin
+
+$(top_builddir)/payload_stage1/payload_stage1.bin$(EXEEXT):
+	(cd $(top_builddir)/payload_stage1/ && $(MAKE) $(AM_MAKEFLAGS) payload_stage1.bin )
+
+payload_stage1.bin$(EXEEXT): $(top_builddir)/payload_stage1/payload_stage1.bin$(EXEEXT)
+	cp $^ $@
+
+$(top_builddir)/payload_stage/payload_stage2.bin$(EXEEXT):
+	(cd $(top_builddir)/payload_stage2/ && $(MAKE) $(AM_MAKEFLAGS) payload_stage2.bin )
+
+payload_stage2.bin$(EXEEXT): $(top_builddir)/payload_stage2/payload_stage2.bin$(EXEEXT)
+	cp $^ $@
+
