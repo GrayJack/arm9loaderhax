@@ -18,9 +18,11 @@
 #include <sys/stat.h>
 
 #define PAYLOAD_ADDRESS		0x23F00000
+#define EMERGENCY_ADDRESS		0x25F00000
 #define A11_PAYLOAD_LOC		0x1FFF4C80  //keep in mind this needs to be changed in the ld script for screen_init too
 #define A11_ENTRY			0x1FFFFFF8
 
+uint8_t otp_sha[32];
 void ctr_libctr9_init(void)
 {
 	//Do nothing yet. Initialize IO later.
@@ -64,21 +66,61 @@ static const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
 
 typedef void (*main_func)(int, char*[]);
 
-void emergency_mode(uint32_t *registers, void *data)
+static void emergency_mode(uint32_t *registers, void *data)
 {
-	ctr_sd_interface sd;
-	ctr_sd_interface_initialize(&sd);
-	ctr_io_read_sector(&sd, (void*)PAYLOAD_ADDRESS, 0x100000, 0, 0x100000);
-	flush_all_caches();
-	ctr_sd_interface_destroy(&sd);
-	((main_func)PAYLOAD_ADDRESS)(0, NULL);
+	static int fail = 0;
+	if (!fail)
+	{
+		fail = 1;
+		FILE *fil1 = fopen("SD:/emergency_regs.bin", "wb");
+		if (fil1)
+		{
+			for (int i = 0; i < 17; ++i)
+			{
+				fprintf(fil1, "%i\n", registers[i]);
+			}
+			fclose(fil1);
+		}
+		
+		FILE *fil = fopen("SD:/emergency.bin", "rb");
+		if (fil)
+		{
+			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
+
+			Elf32_Ehdr header;
+			load_header(&header, fil);
+			fseek(fil, 0, SEEK_SET);
+
+			if (check_elf(&header))
+			{
+				load_segments(&header, fil);
+				((main_func)(header.e_entry))(0, NULL);
+			}
+			else
+			{
+				struct stat st;
+				fstat(fileno(fil), &st);
+				fread((void*)EMERGENCY_ADDRESS, st.st_size, 1, fil);
+				flush_all_caches();
+				((main_func)PAYLOAD_ADDRESS)(0, NULL);
+			}
+		}
+	}
+	else
+	{
+		ctr_sd_interface sd;
+		ctr_sd_interface_initialize(&sd);
+		ctr_io_read_sector(&sd, (void*)EMERGENCY_ADDRESS, 0x100000, 0, 0x100000/512);
+		flush_all_caches();
+		ctr_sd_interface_destroy(&sd);
+		((main_func)PAYLOAD_ADDRESS)(0, NULL);
+	}
 }
 
 int main()
 {
 	//backup the OTP hash, before we lose it due to libctr9 using sha functions
 	//for twl
-	uint8_t otp_sha[32];
 	vol_memcpy(otp_sha, REG_SHAHASH, 0x20);
 
 	ctr_interrupt_prepare();
