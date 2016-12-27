@@ -28,13 +28,18 @@ void ctr_libctr9_init(void)
 
 static void ownArm11()
 {
-	memcpy((void*)A11_PAYLOAD_LOC, screen_init_data_begin, screen_init_data_size);
+	ctr_sd_interface sd;
+	ctr_sd_interface_initialize(&sd);
+	int loc = A11_PAYLOAD_LOC;
+	ctr_io_write(&sd, &loc, 4, 200000);
+	memcpy((void*)A11_PAYLOAD_LOC, &screen_init_data_begin, screen_init_data_size);
+	ctr_system_poweroff();
 	*(volatile uint32_t*)A11_ENTRY = 1;
 	*((volatile uint32_t*)0x1FFAED80) = 0xE51FF004;
 	*((uint32_t *)0x1FFAED84) = A11_PAYLOAD_LOC;
 	*((uint32_t *)0x1FFFFFF0) = 2;
 
-	//AXIWRAM isn't cached, so this should just work
+		//AXIWRAM isn't cached, so this should just work
 	while(*(volatile uint32_t *)A11_ENTRY);
 }
 
@@ -66,9 +71,10 @@ typedef void (*main_func)(int, char*[]);
 
 void emergency_mode(uint32_t *registers, void *data)
 {
+	ctr_system_poweroff();
 	ctr_sd_interface sd;
 	ctr_sd_interface_initialize(&sd);
-	ctr_io_read_sector(&sd, (void*)PAYLOAD_ADDRESS, 0x100000, 0, 0x100000);
+	ctr_io_read_sector(&sd, (void*)PAYLOAD_ADDRESS, 0x100000, 0, 0x100000/512);
 	flush_all_caches();
 	ctr_sd_interface_destroy(&sd);
 	((main_func)PAYLOAD_ADDRESS)(0, NULL);
