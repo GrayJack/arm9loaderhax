@@ -7,15 +7,10 @@
 
 static inline void regSet();
 
-void __attribute__ ((naked)) a11Entry()
+int main()
 {
-	__asm__ (
-		"CPSID aif\n\t" //Disable interrupts
-		"ldr r0,=_stack\n\t"
-		"mov sp, r0"
-	);
-
 	regSet();
+	return 0;
 }
 
 #define PDN_GPU_CNT (*(volatile uint32_t*)0x10141200)

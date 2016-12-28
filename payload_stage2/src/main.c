@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 
 #define PAYLOAD_ADDRESS		0x23F00000
-#define EMERGENCY_ADDRESS		0x25F00000
+#define EMERGENCY_ADDRESS	0x25F00000
 #define A11_PAYLOAD_LOC		0x1FFF4C80  //keep in mind this needs to be changed in the ld script for screen_init too
 #define A11_ENTRY			0x1FFFFFF8
 
@@ -32,8 +32,8 @@ static void ownArm11()
 {
 	memcpy((void*)A11_PAYLOAD_LOC, screen_init_data_begin, screen_init_data_size);
 	*(volatile uint32_t*)A11_ENTRY = 1;
-	*((volatile uint32_t*)0x1FFAED80) = 0xE51FF004;
-	*((uint32_t *)0x1FFAED84) = A11_PAYLOAD_LOC;
+	*((volatile uint32_t*)0x1FFAED80) = 0xE51FF004; //ldr pc, [pc, #-4]; Jump to pointer in following word
+	*((uint32_t *)0x1FFAED84) = A11_PAYLOAD_LOC; //Which is this word
 	*((uint32_t *)0x1FFFFFF0) = 2;
 
 	//AXIWRAM isn't cached, so this should just work
@@ -81,7 +81,7 @@ static void emergency_mode(uint32_t *registers, void *data)
 			}
 			fclose(fil1);
 		}
-		
+
 		FILE *fil = fopen("SD:/emergency.bin", "rb");
 		if (fil)
 		{
