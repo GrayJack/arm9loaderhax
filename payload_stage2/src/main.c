@@ -1,6 +1,5 @@
 #include "screen.h"
 #include "flush.h"
-#include "elf.h"
 #include "screen_init.h"
 
 #include <ctr9/io.h>
@@ -9,6 +8,7 @@
 #include <ctr9/ctr_screen.h>
 #include <ctr9/i2c.h>
 #include <ctr9/sha.h>
+#include <ctr9/ctr_elf_loader.h>
 #include <ctr9/ctr_interrupt.h>
 
 #include <ctrelf.h>
@@ -88,12 +88,12 @@ static void emergency_mode(uint32_t *registers, void *data)
 			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
 
 			Elf32_Ehdr header;
-			load_header(&header, fil);
+			ctr_load_header(&header, fil);
 			fseek(fil, 0, SEEK_SET);
 
-			if (check_elf(&header))
+			if (ctr_check_elf(&header))
 			{
-				load_segments(&header, fil);
+				ctr_load_segments(&header, fil);
 				((main_func)(header.e_entry))(0, NULL);
 			}
 			else
@@ -147,7 +147,7 @@ int main()
 			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
 
 			Elf32_Ehdr header;
-			load_header(&header, payload);
+			ctr_load_header(&header, payload);
 			fseek(payload, 0, SEEK_SET);
 
 			int argc = 1;
@@ -157,9 +157,9 @@ int main()
 			char **argv = (char**)0x30000000;
 			argv[0] = payload_source;
 
-			if (check_elf(&header))
+			if (ctr_check_elf(&header))
 			{
-				load_segments(&header, payload);
+				ctr_load_segments(&header, payload);
 				((main_func)(header.e_entry))(argc, argv);
 			}
 			else
