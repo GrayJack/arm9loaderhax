@@ -2,6 +2,7 @@
 #include "flush.h"
 #include <ctr9/ctr_system.h>
 
+void ctr_libctr9_init(void);
 void ctr_libctr9_init(void)
 {
 	//Do nothing, we do not want any of the normal libctr9 initialization

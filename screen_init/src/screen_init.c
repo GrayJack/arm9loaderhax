@@ -5,6 +5,12 @@
 #define FB_TOP_RIGHT 0x18300000
 #define FB_BOTTOM 0x18346500
 
+void ctr_libctr11_init(void);
+void ctr_libctr11_init(void)
+{
+	//Override the default, we want no default initialization
+}
+
 static inline void regSet();
 
 int main()
