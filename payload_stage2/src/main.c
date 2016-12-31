@@ -10,6 +10,7 @@
 #include <ctr9/sha.h>
 #include <ctr9/ctr_elf_loader.h>
 #include <ctr9/ctr_interrupt.h>
+#include <ctr9/ctr_pxi.h>
 
 #include <ctrelf.h>
 #include <string.h>
@@ -23,21 +24,38 @@
 #define A11_ENTRY			0x1FFFFFF8
 
 uint8_t otp_sha[32];
+void ctr_libctr9_init(void);
 void ctr_libctr9_init(void)
 {
-	//Do nothing yet. Initialize IO later.
+	//Initialize IO later, just prepare the PXI system
+	ctr_pxi_initialize();
+}
+
+static void flush_pxi(void)
+{
+	while (!ctr_pxi_receive_empty_status())
+	{
+		uint32_t throwaway;
+		ctr_pxi_pop(&throwaway);
+	}
 }
 
 static void ownArm11()
 {
 	memcpy((void*)A11_PAYLOAD_LOC, screen_init_data_begin, screen_init_data_size);
-	*(volatile uint32_t*)A11_ENTRY = 1;
+	ctr_pxi_fifo_send_clear();
+
+	flush_pxi();
+
+	//Take over K11?
 	*((volatile uint32_t*)0x1FFAED80) = 0xE51FF004; //ldr pc, [pc, #-4]; Jump to pointer in following word
 	*((uint32_t *)0x1FFAED84) = A11_PAYLOAD_LOC; //Which is this word
 	*((uint32_t *)0x1FFFFFF0) = 2;
 
 	//AXIWRAM isn't cached, so this should just work
-	while(*(volatile uint32_t *)A11_ENTRY);
+	//Wait for screen init to finish, ARM11 should send something via PXI when it is
+	while(ctr_pxi_receive_empty_status());
+	flush_pxi();
 }
 
 static const char *find_file(const char *path, const char* drives[], size_t number_of_drives)

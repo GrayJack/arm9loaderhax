@@ -1,4 +1,6 @@
-#include <inttypes.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <ctr11/ctr_pxi.h>
 
 #define BRIGHTNESS 0x39
 #define FB_TOP_LEFT 0x18300000
@@ -8,14 +10,58 @@
 void ctr_libctr11_init(void);
 void ctr_libctr11_init(void)
 {
-	//Override the default, we want no default initialization
+	ctr_pxi_change_base((volatile uint32_t*)0x10163000);
+	//Override the default, we want no default console initialization
 }
 
-static inline void regSet();
+static inline void regSet(void);
+
+static inline void flush_pxi(void)
+{
+	while (!ctr_pxi_receive_empty_status())
+	{
+		uint32_t data;
+		ctr_pxi_pop(&data);
+	}
+}
 
 int main()
 {
+	ctr_pxi_fifo_send_clear();
 	regSet();
+	ctr_pxi_push(1);
+
+	// Wait for entry to be set
+
+	void (*volatile *brahma_entry)(int argc, char *argv[]) = (void*)0x1FFFFFF8;
+	void (*volatile *k11_entry)(int argc, char *argv[]) = (void*)0x1FFFFFFC;
+	//void (*volatile *core1_entry)(int argc, char *argv[]) = (void*)0x1FFFFFDC;
+	// Reset the entry
+	*brahma_entry = *k11_entry = NULL;
+
+	// Wait for entry to be set
+	while(!*brahma_entry && !*k11_entry && ctr_pxi_receive_empty_status());
+
+	// Jump
+	if (*brahma_entry)
+		(*brahma_entry)(0, NULL);
+	else if (*k11_entry)
+		(*k11_entry)(0, NULL);
+	else//ctr_pxi_receive_empty_status()
+	{
+		void (*volatile *entry)(int argc, char *argv[]);
+		int argc;
+		char **argv;
+		ctr_pxi_pop((uint32_t*)&entry);
+		ctr_pxi_pop((uint32_t*)&argc);
+		ctr_pxi_pop((uint32_t*)&argv);
+
+		flush_pxi();
+		(*entry)(argc, argv);
+	}
+	//else if (*core1_entry)
+	//	(*core1_entry)(0, NULL);
+
 	return 0;
 }
 
@@ -51,10 +97,8 @@ int main()
 #define PDC1_FRAMEBUFFER_SETUP_FBB_ADDR_2 PDC1_FRAMEBUFFER_SETUP_REG(0x98)
 
 
-static inline void regSet()
+static inline void regSet(void)
 {
-	volatile uint32_t *entry = (uint32_t *)0x1FFFFFF8;
-
 	PDN_GPU_CNT = 0x1007F; //bit0: Enable GPU regs 0x10400000+, bit16 turn on LCD backlight?
 	LCD_REG(0x14) = 0x00000001; //UNKNOWN register, maybe LCD related? 0x10202000
 	LCD_REG(0xC) &= 0xFFFEFFFE; //UNKNOWN register, maybe LCD related?
@@ -139,13 +183,5 @@ static inline void regSet()
 	PDC1_FRAMEBUFFER_SETUP_FBA_ADDR_1 = FB_BOTTOM;
 	PDC1_FRAMEBUFFER_SETUP_FBA_ADDR_2 = FB_BOTTOM;
 
-	// Reset the entry
-	*entry = 0;
-
-	// Wait for entry to be set
-	while(!*entry);
-
-	// Jump
-	((void (*)())*entry)();
-}
+	}
 
