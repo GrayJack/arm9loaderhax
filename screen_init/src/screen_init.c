@@ -27,6 +27,7 @@ static inline void flush_pxi(void)
 
 int main()
 {
+	ctr_pxi_set_enabled(true);
 	ctr_pxi_fifo_send_clear();
 	regSet();
 	ctr_pxi_push(1);
@@ -49,15 +50,17 @@ int main()
 		(*k11_entry)(0, NULL);
 	else//ctr_pxi_receive_empty_status()
 	{
-		void (*volatile *entry)(int argc, char *argv[]);
+		void (*entry)(int argc, char *argv[]);
 		int argc;
 		char **argv;
 		ctr_pxi_pop((uint32_t*)&entry);
+		while(ctr_pxi_receive_empty_status());
 		ctr_pxi_pop((uint32_t*)&argc);
+		while(ctr_pxi_receive_empty_status());
 		ctr_pxi_pop((uint32_t*)&argv);
 
 		flush_pxi();
-		(*entry)(argc, argv);
+		entry(argc, argv);
 	}
 	//else if (*core1_entry)
 	//	(*core1_entry)(0, NULL);
