@@ -99,7 +99,7 @@ static void emergency_mode(uint32_t *registers, void *data)
 	if (!fail)
 	{
 		fail = 1;
-		FILE *fil1 = fopen("SD:/emergency_regs.bin", "wb");
+		FILE *fil1 = fopen("SD:/emergency_regs.elf", "wb");
 		if (fil1)
 		{
 			for (int i = 0; i < 17; ++i)
@@ -109,7 +109,7 @@ static void emergency_mode(uint32_t *registers, void *data)
 			fclose(fil1);
 		}
 
-		FILE *fil = fopen("SD:/emergency.bin", "rb");
+		FILE *fil = fopen("SD:/emergency.elf", "rb");
 		if (fil)
 		{
 			vol_memcpy(REG_SHAHASH, otp_sha, 0x20);
