@@ -40,12 +40,14 @@ static void flush_pxi(void)
 	}
 }
 
-static void ownArm11()
+static void ownArm11(bool isScreenInit)
 {
 	memcpy((void*)A11_PAYLOAD_LOC, screen_init_data_begin, screen_init_data_size);
 	ctr_pxi_fifo_send_clear();
 
 	flush_pxi();
+	//Tell ARM11 whether to do screen init or not
+	ctr_pxi_push((uint32_t)isScreenInit);
 
 	//Take over K11?
 	*((volatile uint32_t*)0x1FFAED80) = 0xE51FF004; //ldr pc, [pc, #-4]; Jump to pointer in following word
@@ -58,15 +60,20 @@ static void ownArm11()
 	flush_pxi();
 }
 
-static const char *find_file(const char *path, const char* drives[], size_t number_of_drives)
+static const char *find_file(const char *paths[], size_t number_of_paths, const char* drives[], size_t number_of_drives, size_t *index)
 {
-	for (size_t i = 0; i < number_of_drives; ++i)
+	for (size_t j = 0; j < number_of_paths; ++j)
 	{
-		ctr_drives_chdrive(drives[i]);
-		struct stat st;
-		if (stat(path, &st) == 0)
+		const char *path = paths[j];
+		for (size_t i = 0; i < number_of_drives; ++i)
 		{
-			return drives[i];
+			ctr_drives_chdrive(drives[i]);
+			struct stat st;
+			if (stat(path, &st) == 0)
+			{
+				*index = j;
+				return drives[i];
+			}
 		}
 	}
 	return NULL;
@@ -79,6 +86,8 @@ inline static void vol_memcpy(volatile void *dest, volatile void *sorc, size_t s
 	while(size--)
 		dst[size] = src[size];
 }
+
+static const char *paths[] = {"arm9loaderhax.elf", "arm9loaderhax_si.elf"};
 
 static const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
 
@@ -148,17 +157,24 @@ int main()
 
 	ctr_drives_initialize();
 
-	const char * drive = find_file("/arm9loaderhax.bin", drives, 4);
+	size_t file_index = 0;
+	const char *drive = find_file(paths, 2, drives, 4, &file_index);
 	if (drive)
 	{
-		setFramebuffers();
-		ownArm11();
-		clearScreens();
-		i2cWriteRegister(3, 0x22, 0x2);
-		ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
+		const char *path = paths[file_index];
+		ownArm11(strcmp(path, "arm9loaderhax.elf"));
+
+		if (strcmp(path, "arm9loaderhax_si.elf") == 0)
+		{
+			setFramebuffers();
+			clearScreens();
+			i2cWriteRegister(3, 0x22, 0x2);
+			ctr_screen_enable_backlight(CTR_SCREEN_BOTH);
+		}
 
 		ctr_drives_chdrive(drive);
-		FILE *payload = fopen("/arm9loaderhax.bin", "rb");
+		FILE *payload = fopen(path, "rb");
+
 		if(payload)
 		{
 			//Restore the OTP hash
@@ -171,7 +187,7 @@ int main()
 			int argc = 1;
 			char *payload_source = (char*)0x30000004;
 			strcpy(payload_source, drive);
-			strcat(payload_source, "/arm9loaderhax.bin");
+			strcat(payload_source, path);
 			char **argv = (char**)0x30000000;
 			argv[0] = payload_source;
 
@@ -187,7 +203,7 @@ int main()
 				fread((void*)PAYLOAD_ADDRESS, st.st_size, 1, payload);
 				flush_all_caches();
 				((main_func)PAYLOAD_ADDRESS)(argc, argv);
-			}
+			}	
 		}
 	}
 

@@ -29,7 +29,12 @@ int main()
 {
 	ctr_pxi_set_enabled(true);
 	ctr_pxi_fifo_send_clear();
-	regSet();
+
+	uint32_t isScreenInit;
+	while (ctr_pxi_receive_empty_status());
+	ctr_pxi_pop(&isScreenInit);
+	if (isScreenInit)
+		regSet();
 	ctr_pxi_push(1);
 
 	// Wait for entry to be set
