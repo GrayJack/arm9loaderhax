@@ -66,3 +66,4 @@ make
 * [3dbrew community](http://3dbrew.org/)
 * bilis/b1l1s for his screen init code, and work on inegrating it into stage 2
 * dark_samus for work on integrating screen init into stage 2
+* Aurora Wright for hashGenerator
