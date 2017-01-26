@@ -21,7 +21,7 @@
 #define PAYLOAD_ADDRESS		0x23F00000
 #define EMERGENCY_ADDRESS	0x25F00000
 #define A11_PAYLOAD_LOC		0x1FFF4C80  //keep in mind this needs to be changed in the ld script for screen_init too
-#define A11_ENTRY			0x1FFFFFF8
+#define A11_ENTRY		0x1FFFFFF8
 
 uint8_t otp_sha[32];
 void ctr_libctr9_init(void);
@@ -203,11 +203,10 @@ int main()
 				fread((void*)PAYLOAD_ADDRESS, st.st_size, 1, payload);
 				flush_all_caches();
 				((main_func)PAYLOAD_ADDRESS)(argc, argv);
-			}	
+			}
 		}
 	}
 
 	ctr_system_poweroff();
 	return 0;
 }
-

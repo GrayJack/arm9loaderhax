@@ -8,21 +8,21 @@ This exploit was found by **plutoo** and **yellows8**.
 
 ##Usage
 
-It loads an arm9loaderhax.elf (does not init the screens) or arm9loaderhax_si.elf (inits the screens) ARM9 payload from the root of the SD card, CTRNAND, TWLN, TWLP, respectively, at address 0x23F00000.
+It loads an **arm9loaderhax.elf** (does not init the screens) or **arm9loaderhax_si.elf** (inits the screens) ARM9 payload from the root of the SD card, CTRNAND, TWLN, TWLP, respectively, at address 0x23F00000.
 This means that it offers a BRAHMA-like setup, and as such has compatibility with every payload BRAHMA can run.
 
-You can also run code on the ARM11 by writing its memory address to 0x1FFFFFF8, 0x1FFFFFF8, or from making sense of 3 words passed via PXI (address, argc, argv).
+You can also run code on the ARM11 by writing its memory address to 0x1FFFFFF8, 0x1FFFFFFC, or from making sense of 3 words passed via PXI (address, argc, argv).
 
-There is a emergency mode, loading a payload (emergency.elf) from SD card to memory address 0x25F00000 if an exception is triggered, but if that fails due to another bug, it will try again, this time reading directly from the SD card (emergency_regs.elf).
+There is a emergency mode, loading a payload (**emergency.elf**) from SD card to memory address 0x25F00000 if an exception is triggered, but if that fails due to another bug, it will try again, this time reading directly from the SD card (**emergency_regs.elf**).
 The emergency loading has not been tested, but at least adding the code in did not cause an o3DS to fail to load anything else.
 
 ## Installation
 
-Use the SafeA9LHInstaller 2.6.2 (later version doesn't work)
+Use the [SafeA9LHInstaller 2.6.2](https://github.com/AuroraWright/SafeA9LHInstaller/releases/tag/v2.6.2) (later version doesn't work)
 
 ## Software Update
 
-Use the SafeA9LHInstaller 2.6.2 (later version doesn't work)
+Use the [SafeA9LHInstaller 2.6.2](https://github.com/AuroraWright/SafeA9LHInstaller/releases/tag/v2.6.2) (later version doesn't work)
 
 
 ## Setup
@@ -49,7 +49,7 @@ make
 
 ## Credits
 
-*Copyright 2016, Jason Dellaluce*
+*Copyright 2016, Jason Dellaluce/Gabriel Marcano*
 
 
 *Licensed under GPLv2 or any later version, refer to the license.txt file included.*
