@@ -14,7 +14,7 @@ This means that it offers a BRAHMA-like setup, and as such has compatibility wit
 You can also run code on the ARM11 by writing its memory address to 0x1FFFFFF8, 0x1FFFFFFC, or from making sense of 3 words passed via PXI (address, argc, argv).
 
 There is a emergency mode, loading a payload (**emergency.elf**) from SD card to memory address 0x25F00000 if an exception is triggered, but if that fails due to another bug, it will try again, this time reading directly from the SD card (**emergency_regs.elf**).
-The emergency loading has not been tested, but at least adding the code in did not cause an o3DS to fail to load anything else.
+The emergency loading has not been tested, but at least adding the code in did not cause an O3DS/N3DS to fail to load anything else.
 
 ## Installation
 
@@ -46,6 +46,8 @@ autoreconf -if
 ./configure --host arm-none-eabi --prefix=$CTRARM9
 make
 ```
+
+**Note:** The variable CTRARM11 is required for compiling, since it's used for finding the libraries used for screen init.
 
 ## Credits
 
