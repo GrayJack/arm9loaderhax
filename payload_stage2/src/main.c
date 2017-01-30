@@ -87,7 +87,7 @@ inline static void vol_memcpy(volatile void *dest, volatile void *sorc, size_t s
 		dst[size] = src[size];
 }
 
-static const char *paths[] = {"arm9loaderhax.elf", "arm9loaderhax_si.elf"};
+static const char *paths[] = {"arm9loaderhax.elf", "arm9loaderhax_si.elf", "arm9loaderhax.bin", "arm9loaderhax_si.bin"};
 
 static const char *drives[] = {"SD:", "CTRNAND:", "TWLN:", "TWLP:"};
 
@@ -158,13 +158,13 @@ int main()
 	ctr_drives_initialize();
 
 	size_t file_index = 0;
-	const char *drive = find_file(paths, 2, drives, 4, &file_index);
+	const char *drive = find_file(paths, 4, drives, 4, &file_index);
 	if (drive)
 	{
 		const char *path = paths[file_index];
-		ownArm11(strcmp(path, "arm9loaderhax.elf"));
+		ownArm11(strcmp(path, "arm9loaderhax.elf") && strcmp(path, "arm9loaderhax.bin"));
 
-		if (strcmp(path, "arm9loaderhax_si.elf") == 0)
+		if ((strcmp(path, "arm9loaderhax_si.elf") == 0) || (strcmp(path, "arm9loaderhax_si.bin") == 0))
 		{
 			setFramebuffers();
 			clearScreens();
