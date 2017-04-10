@@ -8,7 +8,7 @@ This exploit was found by **plutoo** and **yellows8**.
 
 ## Usage
 
-It loads an **arm9loaderhax.elf/arm9loaderhax.bin** (does not init the screens) or **arm9loaderhax_si.elf/arm9loaderhax_si.bin** (inits the screens) ARM9 payload from the root of the SD card, CTRNAND, TWLN, TWLP, respectively, at address 0x23F00000 if the file is a binary.
+It loads an **arm9loaderhax.elf/arm9loaderhax.bin** (does not init any screens) or **arm9loaderhax_si.elf/arm9loaderhax_si.bin** (inits both screens) ARM9 payload from the root of the SD card, CTRNAND, TWLN, TWLP, respectively, at address 0x23F00000 if the file is a binary.
 This means that it offers a BRAHMA-like setup, and as such has compatibility with every payload BRAHMA can run.
 
 **Note:** The priority of the payloads are arm9loaderhax.elf, arm9loaderhax_si.elf, arm9loaderhax.bin and arm9loaderhax_si.bin, respectively.
@@ -16,9 +16,9 @@ This means that it offers a BRAHMA-like setup, and as such has compatibility wit
 You can also run code on the ARM11 by writing its memory address to 0x1FFFFFF8, 0x1FFFFFFC, or from making sense of 3 words passed via PXI (address, argc, argv).
 
 There is an emergency mode, which is loading a payload (**emergency.elf**) from SD card if an exception is triggered, to memory address 0x25F00000 if the file is a binary, but if that fails due to another bug, it will try again, this time reading directly from the SD card (**emergency_regs.elf**).
-The emergency loading has not been tested, but at least adding the code did not cause an O3DS/N3DS to fail to load anything else.
+The emergency loading has not been tested, but at least adding the code, did not cause an O3DS/N3DS to fail to load anything else.
 
-**Note:** This implementation is smart enough to tell whether a file is ELF or not. With that said, if you change the file extention of "*.elf" to "*.bin" or vice-versa it will still check to know if the file is a ELF or a binary and will load the file in the appopiate way.
+**Note:** This implementation is smart enough to tell whether a file is an ELF or not. With that said, if you change the file extention of "*.elf" to "*.bin" or vice-versa it will still check to know if the file is a ELF or a binary and will load the file in the appropriate way.
 
 ## Installation
 
@@ -34,7 +34,6 @@ Use the [SafeA9LHInstaller 2.6.2](https://github.com/AuroraWright/SafeA9LHInstal
 ####**Required Enviroment**
 
 * devkitARM
-* [libctru](https://github.com/smealum/ctrulib)
 * [libctrelf](https://github.com/gemarcano/libctrelf)
 * [libctr_core](https://github.com/gemarcano/libctr_core)
 * [libctr9](https://github.com/gemarcano/libctr9)
@@ -44,7 +43,11 @@ Use the [SafeA9LHInstaller 2.6.2](https://github.com/AuroraWright/SafeA9LHInstal
 
 ####**Building**
 
+If you followed the installation of the Gelex's libraries right, then follow:
+
 ```
+export CTRARM9=~/.local/usr/arm-none-eabi-9
+export CTRARM11=~/.local/usr/arm-none-eabi-11
 autoreconf -if
 ./configure --host arm-none-eabi --prefix=$CTRARM9
 make -j10

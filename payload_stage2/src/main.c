@@ -1,22 +1,22 @@
-#include "screen.h"
-#include "flush.h"
-#include "screen_init.h"
+#include "screen.h"				 // for setFramebuffers, clearScreens
+#include "flush.h"				 // for flush_all_caches
+#include "screen_init.h"		 // for screen_init_data_begin, screen_init_data_size
 
-#include <ctr9/io.h>
-#include <ctr9/io/ctr_drives.h>
-#include <ctr9/ctr_system.h>
-#include <ctr9/ctr_screen.h>
-#include <ctr9/i2c.h>
-#include <ctr9/sha.h>
-#include <ctr9/ctr_elf_loader.h>
-#include <ctr9/ctr_interrupt.h>
-#include <ctr9/ctr_pxi.h>
+#include <ctr9/io.h>			 // for ctr_sd_interface, ctr_io_read_sector, ctr...
+#include <ctr9/io/ctr_drives.h>  // for ctr_drives_chdrive, ctr_drives_initialize
+#include <ctr9/ctr_system.h>	 // for ctr_system_poweroff
+#include <ctr9/ctr_screen.h>	 // for ctr_screen_enable_backlight
+#include <ctr9/i2c.h>			 // for i2cWriteRegister
+#include <ctr9/sha.h>			 // for REG_SHAHASH
+#include <ctr9/ctr_elf_loader.h> // for ctr_load_header, ctr_load_segments, ctr_check_elf
+#include <ctr9/ctr_interrupt.h>  // for ctr_interrupt_prepare, ctr_interrupt_set, CTR_INTERRUPT_*
+#include <ctr9/ctr_pxi.h>		 // for ctr_pxi_initialize, ctr_pxi_receive_empty_status, ...
 
-#include <ctrelf.h>
-#include <string.h>
-#include <stdio.h>
+#include <ctrelf.h>				 // for Elf32_Ehdr
+#include <string.h>				 // for memcpy, strcmp, strcat, strcpy, NULL
+#include <stdio.h>				 // for FILE, fclose, fopen, fread, fseek
 
-#include <sys/stat.h>
+#include <sys/stat.h>			 // for stat
 
 #define PAYLOAD_ADDRESS		0x23F00000
 #define EMERGENCY_ADDRESS	0x25F00000

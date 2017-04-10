@@ -1,5 +1,5 @@
 #include "screen.h"
-#include <ctr9/i2c.h>
+#include <stdint.h> // for uint32_t
 
 #define TOP_SCREEN_SIZE	(400 * 240 * 3 / 4)
 #define BOT_SCREEN_SIZE	(320 * 240 * 3 / 4)
@@ -34,4 +34,3 @@ void clearScreens(void)
 		*((volatile uint32_t*)0x18346500 + i) = 0;
 	}
 }
-

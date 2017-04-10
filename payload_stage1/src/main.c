@@ -1,6 +1,5 @@
-#include <ctr9/io.h>
-#include "flush.h"
-#include <ctr9/ctr_system.h>
+#include <ctr9/io.h>		  // for ctr_nand_interface, ctr_nand_interface_init...
+#include "flush.h"			  // for flush_all_caches
 
 void ctr_libctr9_init(void);
 void ctr_libctr9_init(void)
@@ -22,4 +21,3 @@ int main()
 
 	return 0;
 }
-

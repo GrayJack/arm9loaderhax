@@ -1,6 +1,6 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <ctr11/ctr_pxi.h>
+#include <stdint.h>		   // for uint32_t
+#include <stddef.h>		   // for NULL
+#include <ctr11/ctr_pxi.h> // for ctr_pxi_change_base, ctr_pxi_receive_empty_status, ctr_pxi_...
 
 #define BRIGHTNESS 0x39
 #define FB_TOP_LEFT 0x18300000
@@ -53,7 +53,7 @@ int main()
 		(*brahma_entry)(0, NULL);
 	else if (*k11_entry)
 		(*k11_entry)(0, NULL);
-	else//ctr_pxi_receive_empty_status()
+	else //ctr_pxi_receive_empty_status()
 	{
 		void (*entry)(int argc, char *argv[]);
 		int argc;
@@ -192,4 +192,3 @@ static inline void regSet(void)
 	PDC1_FRAMEBUFFER_SETUP_FBA_ADDR_2 = FB_BOTTOM;
 
 	}
-
